@@ -5,9 +5,11 @@ package main
  */
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -34,7 +36,9 @@ func main() {
 	var body io.ReadSeeker
 	var err error
 	if *bodyloc == "-" {
-		log.Fatal("Unimplemented, you must specify a file")
+		var bodybytes []byte
+		bodybytes, err = ioutil.ReadAll(os.Stdin)
+		body = bytes.NewReader(bodybytes)
 	} else {
 		body, err = os.Open(*bodyloc)
 	}
@@ -68,7 +72,7 @@ func main() {
 	signer.Sign(req, body, service, *region, time.Now())
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Print(err)
+		log.Fatalf("HTTP Request failed, %s", err)
 	}
 	fmt.Print(resp.Status + "\n")
 	io.Copy(os.Stdout, resp.Body)
